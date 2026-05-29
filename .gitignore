@@ -1,0 +1,52 @@
+# Build folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache/files
+.vs/
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# ASP.NET Core
+appsettings.Development.json
+
+# EF Core local DB
+*.mdf
+*.ldf
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Publish output
+publish/
+
+# Node modules (if frontend exists)
+node_modules/
+
+# Environment files
+.env
+
+# NuGet packages
+*.nupkg
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+.vs/
+bin/
+obj/
