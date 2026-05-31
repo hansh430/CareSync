@@ -23,6 +23,8 @@ namespace CareSync.Controllers
             _userService = userService;
         }
 
+        //-------------------- Registration --------------------------------------------//
+
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
@@ -34,6 +36,8 @@ namespace CareSync.Controllers
             return Ok(result.Data);
         }
 
+        //-------------------- Login --------------------------------------------//
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto model)
         {
@@ -41,6 +45,28 @@ namespace CareSync.Controllers
 
             if (!result.Success)
                 return BadRequest(result.Message);
+
+            return Ok(result);
+        }
+
+        //-------------------- Get All Users --------------------------------------------//
+        [HttpGet("getUsers")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var result = await _userService.GetUsersAsync();
+
+            return Ok(result);
+        }
+
+        //-------------------- Get User by ID --------------------------------------------//
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            var result = await _userService.GetUserByIdAsync(id);
+
+            if (!result.Success)
+                return NotFound(result.Message);
 
             return Ok(result);
         }

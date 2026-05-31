@@ -7,5 +7,7 @@ namespace CareSync.Services
     {
         Task<ServiceResponse<UserDto>> RegisterAsync(RegisterDto model);
         Task<ServiceResponse<UserDto>> LoginAsync(LoginDto model);
+        Task<ServiceResponse<List<UserDto>>> GetUsersAsync();
+        Task<ServiceResponse<UserDto>> GetUserByIdAsync(int id);
     }
 }

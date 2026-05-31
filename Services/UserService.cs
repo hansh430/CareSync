@@ -15,7 +15,7 @@ namespace CareSync.Services
             _context = context;
         }
 
-
+        //-------------------- Registration --------------------------------------------//
         public async Task<ServiceResponse<UserDto>> RegisterAsync(RegisterDto model)
         {
             var response = new ServiceResponse<UserDto>();
@@ -52,6 +52,8 @@ namespace CareSync.Services
             response.Message = "Registration successful.";
             return response;
         }
+
+        //-------------------- Login --------------------------------------------//
         public async Task<ServiceResponse<UserDto>> LoginAsync(LoginDto model)
         {
             var response = new ServiceResponse<UserDto>();
@@ -81,6 +83,47 @@ namespace CareSync.Services
                 Status = user.Status
             };
             response.Message = "Login successful.";
+
+            return response;
+        }
+
+        //-------------------- Get All Users --------------------------------------------//
+        public async Task<ServiceResponse<List<UserDto>>> GetUsersAsync()
+        {
+            var response = new ServiceResponse<List<UserDto>>();
+
+            var users = await _context.Users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+            }).ToListAsync();
+
+            response.Data = users;
+            response.Message = "Users retrieved successfully.";
+            return response;
+        }
+
+        //-------------------- Get User by ID --------------------------------------------//
+        public async Task<ServiceResponse<UserDto>> GetUserByIdAsync(int id)
+        {
+            var response = new ServiceResponse<UserDto>();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "User not found.";
+                return response;
+            }
+            response.Data = new UserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email
+            };
 
             return response;
         }
