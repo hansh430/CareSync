@@ -33,5 +33,16 @@ namespace CareSync.Controllers
 
             return Ok(result.Data);
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto model)
+        {
+            var result = await _userService.LoginAsync(model);
+
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }

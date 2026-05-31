@@ -15,6 +15,7 @@ namespace CareSync.Services
             _context = context;
         }
 
+
         public async Task<ServiceResponse<UserDto>> RegisterAsync(RegisterDto model)
         {
             var response = new ServiceResponse<UserDto>();
@@ -32,9 +33,9 @@ namespace CareSync.Services
                 LastName = model.LastName,
                 Email = model.Email,
                 Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
-                Type="User",
+                Type = "User",
                 CreatedOn = DateTime.UtcNow,
-                Status = 1,
+                Status = 0,
                 Fund = 0
             };
 
@@ -51,5 +52,39 @@ namespace CareSync.Services
             response.Message = "Registration successful.";
             return response;
         }
+        public async Task<ServiceResponse<UserDto>> LoginAsync(LoginDto model)
+        {
+            var response = new ServiceResponse<UserDto>();
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == model.Email);
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "Invalid email or password.";
+                return response;
+            }
+            bool validPassword = BCrypt.Net.BCrypt.Verify(model.Password, user.Password);
+
+            if (!validPassword)
+            {
+                response.Success = false;
+                response.Message = "Invalid email or password.";
+                return response;
+            }
+            response.Data = new UserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Fund = user.Fund,
+                Type = user.Type,
+                Status = user.Status
+            };
+            response.Message = "Login successful.";
+
+            return response;
+        }
     }
+
+
 }
