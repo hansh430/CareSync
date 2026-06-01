@@ -127,7 +127,49 @@ namespace CareSync.Services
 
             return response;
         }
-    }
 
+        //-------------------- update User --------------------------------------------//
+        public async Task<ServiceResponse<UserDto>> UpdateUserAsync(int id, UpdateUserDto model)
+        {
+            var response = new ServiceResponse<UserDto>();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "User not found.";
+                return response;
+            }
+            // Optional: Prevent duplicate emails
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                bool emailExists = await _context.Users
+                    .AnyAsync(u => u.Email == model.Email && u.Id != id);
+
+                if (emailExists)
+                {
+                    response.Success = false;
+                    response.Message = "Email already exists.";
+                    return response;
+                }
+            }
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Email = model.Email;
+            await _context.SaveChangesAsync();
+
+            response.Data = new UserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email
+            };
+
+            response.Message = "Profile updated successfully.";
+            return response;
+        }
+
+    }
 
 }

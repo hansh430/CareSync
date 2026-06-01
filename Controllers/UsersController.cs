@@ -70,5 +70,18 @@ namespace CareSync.Controllers
 
             return Ok(result);
         }
+
+        //-------------------- Update User Details --------------------------------------------//
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, UpdateUserDto model)
+        {
+            var result = await _userService.UpdateUserAsync(id, model);
+
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }
