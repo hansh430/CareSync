@@ -1,5 +1,6 @@
 ﻿using CareSync.Common;
 using CareSync.Data;
+using CareSync.Dtos;
 using CareSync.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,9 @@ namespace CareSync.Services
         {
             _context = context;
         }
+
+        //--------------------place order  -------------------------------------
+
         public async Task<ServiceResponse<Order>> PlaceOrderAsync(int userId)
         {
             var response = new ServiceResponse<Order>();
@@ -64,5 +68,48 @@ namespace CareSync.Services
 
             return response;
         }
+
+        //--------------------Get list of orders for a user -------------------------------------
+
+        public async Task<ServiceResponse<List<OrderDto>>> GetOrderByUserAsync(int userId)
+        {
+            var response = new ServiceResponse<List<OrderDto>>();
+
+            response.Data = await _context.Orders.Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.Id)
+                .Select(o => new OrderDto
+                {
+                    Id = o.Id,
+                    OrderNo = o.OrderNo,
+                    OrderTotal = o.OrderTotal,
+                    OrderStatus = o.OrderStatus,
+                }).ToListAsync();
+
+            return response;
+        }
+
+        //--------------------Get order details -------------------------------------
+        public async Task<ServiceResponse<List<OrderItemDto>>> GetOrderDetailsAsync(int orderId)
+        {
+            var response = new ServiceResponse<List<OrderItemDto>>();
+
+            response.Data = await (
+                from oi in _context.OrderItems
+                join m in _context.Medicines
+                on oi.MedicineId equals m.Id
+                where oi.OrderId == orderId
+                select new OrderItemDto
+                {
+                    MedicineId = m.Id,
+                    MedicineName = m.Name,
+                    ImageUrl = m.ImageUrl,
+                    UnitPrice = oi.UnitPrice,
+                    Discount = oi.Discount,
+                    Quantity = oi.Quantity,
+                    TotalPrice = oi.TotalPrice
+                }).ToListAsync();
+            return response;
+        }
+
     }
 }

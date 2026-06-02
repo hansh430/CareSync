@@ -15,6 +15,8 @@ namespace CareSync.Controllers
             _orderService = orderService;
         }
 
+        //--------------------place order -------------------------------------
+
         [HttpPost("place-order/{userId}")]
         public async Task<IActionResult> PlaceOrder(int userId)
         {
@@ -23,6 +25,22 @@ namespace CareSync.Controllers
             if (!result.Success)
                 return BadRequest(result.Message);
 
+            return Ok(result);
+        }
+
+        //--------------------Get order details for a user -------------------------------------
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetOrdersByUser(int userId)
+        {
+            var result = await _orderService.GetOrderByUserAsync(userId);
+            return Ok(result);
+        }
+
+        //--------------------Get order details by order id -------------------------------------
+        [HttpGet("{orderId}")]
+        public async Task<IActionResult> GetOrderDetails(int orderId)
+        {
+            var result = await _orderService.GetOrderDetailsAsync(orderId);
             return Ok(result);
         }
     }
