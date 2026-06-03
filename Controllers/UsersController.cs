@@ -15,15 +15,17 @@ namespace CareSync.Controllers
         private readonly IConfiguration _configuration;
         private readonly EmedicineContext _context;
         private readonly IUserService _userService;
+        private readonly IAdminService _adminservice;
 
-        public UsersController(IConfiguration configuration, EmedicineContext context, IUserService userService)
+        public UsersController(IConfiguration configuration, EmedicineContext context, IUserService userService, IAdminService adminService)
         {
             _configuration = configuration;
             _context = context;
             _userService = userService;
+            _adminservice = adminService;
         }
 
-        //-------------------- Registration --------------------------------------------//
+        //-------------------- User Registration --------------------------------------------//
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
@@ -36,7 +38,7 @@ namespace CareSync.Controllers
             return Ok(result.Data);
         }
 
-        //-------------------- Login --------------------------------------------//
+        //-------------------- User Login --------------------------------------------//
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto model)
@@ -45,6 +47,18 @@ namespace CareSync.Controllers
 
             if (!result.Success)
                 return BadRequest(result.Message);
+
+            return Ok(result);
+        }
+
+        [HttpPost("admin-login")]
+        public async Task<IActionResult> AdminLogin(AdminLoginDto model)
+        {
+            var result =
+                await _adminservice.AdminLoginAsync(model);
+
+            if (!result.Success)
+                return Unauthorized(result.Message);
 
             return Ok(result);
         }

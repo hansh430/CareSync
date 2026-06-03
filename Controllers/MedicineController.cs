@@ -31,5 +31,29 @@ namespace CareSync.Controllers
 
             return Ok(result);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateMedicine(int id, UpdateMedicineDto model)
+        {
+            var result = await _medicineService
+                .UpdateMedicineAsync(id, model);
+
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMedicine(int id)
+        {
+            var result = await _medicineService
+                .DeleteMedicineAsync(id);
+
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result);
+        }
     }
 }

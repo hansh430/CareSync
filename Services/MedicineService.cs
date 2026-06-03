@@ -78,5 +78,53 @@ namespace CareSync.Services
                 Data = await _context.Medicines.ToListAsync()
             };
         }
+        public async Task<ServiceResponse<Medicine>> UpdateMedicineAsync(int id, UpdateMedicineDto model)
+        {
+            var response = new ServiceResponse<Medicine>();
+            var medicine = await _context.Medicines.FirstOrDefaultAsync(x => x.Id == id);
+
+            if (medicine == null)
+            {
+                response.Success = false;
+                response.Message = "Medicine not found.";
+                return response;
+            }
+
+            medicine.Name = model.Name;
+            medicine.Manufacturer = model.Manufacturer;
+            medicine.UnitPrice = model.UnitPrice;
+            medicine.Discount = model.Discount;
+            medicine.Quantity = model.Quantity;
+            medicine.ExpDate = model.ExpDate;
+
+            await _context.SaveChangesAsync();
+            response.Data = medicine;
+            response.Message = "Medicine updated successfully.";
+
+            return response;
+        }
+        public async Task<ServiceResponse<bool>> DeleteMedicineAsync(int id)
+        {
+            var response = new ServiceResponse<bool>();
+
+            var medicine = await _context.Medicines
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (medicine == null)
+            {
+                response.Success = false;
+                response.Message = "Medicine not found.";
+                return response;
+            }
+
+            medicine.Status = 0;
+
+            await _context.SaveChangesAsync();
+
+            response.Data = true;
+            response.Message = "Medicine deleted successfully.";
+
+            return response;
+        }
     }
 }
