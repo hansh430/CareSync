@@ -63,14 +63,6 @@ namespace CareSync.Controllers
             return Ok(result);
         }
 
-        //-------------------- Get All Users --------------------------------------------//
-        [HttpGet("getUsers")]
-        public async Task<IActionResult> GetUsers()
-        {
-            var result = await _userService.GetUsersAsync();
-
-            return Ok(result);
-        }
 
         //-------------------- Get User by ID --------------------------------------------//
 

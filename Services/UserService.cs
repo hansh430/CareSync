@@ -87,23 +87,7 @@ namespace CareSync.Services
             return response;
         }
 
-        //-------------------- Get All Users --------------------------------------------//
-        public async Task<ServiceResponse<List<UserDto>>> GetUsersAsync()
-        {
-            var response = new ServiceResponse<List<UserDto>>();
 
-            var users = await _context.Users.Select(u => new UserDto
-            {
-                Id = u.Id,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email,
-            }).ToListAsync();
-
-            response.Data = users;
-            response.Message = "Users retrieved successfully.";
-            return response;
-        }
 
         //-------------------- Get User by ID --------------------------------------------//
         public async Task<ServiceResponse<UserDto>> GetUserByIdAsync(int id)
