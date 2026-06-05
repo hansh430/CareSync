@@ -9,10 +9,11 @@ namespace CareSync.Services
     public class UserService : IUserService
     {
         private readonly EmedicineContext _context;
-
-        public UserService(EmedicineContext context)
+        private readonly ITokenService _tokenService;
+        public UserService(EmedicineContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
         //-------------------- Registration --------------------------------------------//
@@ -54,40 +55,58 @@ namespace CareSync.Services
         }
 
         //-------------------- Login --------------------------------------------//
-        public async Task<ServiceResponse<UserDto>> LoginAsync(LoginDto model)
+
+        public async Task<ServiceResponse<LoginResponseDto>> LoginAsync(LoginDto model)
         {
-            var response = new ServiceResponse<UserDto>();
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == model.Email);
+            var response = new ServiceResponse<LoginResponseDto>();
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(x =>
+                    x.Email == model.Email);
+
             if (user == null)
             {
                 response.Success = false;
                 response.Message = "Invalid email or password.";
+
                 return response;
             }
-            bool validPassword = BCrypt.Net.BCrypt.Verify(model.Password, user.Password);
+
+            bool validPassword =
+                BCrypt.Net.BCrypt.Verify(
+                    model.Password,
+                    user.Password);
 
             if (!validPassword)
             {
                 response.Success = false;
                 response.Message = "Invalid email or password.";
+
                 return response;
             }
-            response.Data = new UserDto
+
+            var token = _tokenService.CreateToken(user);
+
+            response.Data = new LoginResponseDto
             {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Fund = user.Fund,
-                Type = user.Type,
-                Status = user.Status
+                Token = token,
+
+                User = new UserDto
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    Fund = user.Fund,
+                    Type = user.Type,
+                    Status = user.Status
+                }
             };
+
             response.Message = "Login successful.";
 
             return response;
         }
-
-
 
         //-------------------- Get User by ID --------------------------------------------//
         public async Task<ServiceResponse<UserDto>> GetUserByIdAsync(int id)
@@ -153,6 +172,7 @@ namespace CareSync.Services
             response.Message = "Profile updated successfully.";
             return response;
         }
+
 
     }
 

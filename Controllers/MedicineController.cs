@@ -1,5 +1,6 @@
 ﻿using CareSync.Dtos;
 using CareSync.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +17,7 @@ namespace CareSync.Controllers
             _medicineService = medicineService;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AddMedicine([FromForm] AddMedicineDto model)
         {
@@ -32,6 +34,7 @@ namespace CareSync.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMedicine(int id, UpdateMedicineDto model)
         {
@@ -44,6 +47,7 @@ namespace CareSync.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMedicine(int id)
         {

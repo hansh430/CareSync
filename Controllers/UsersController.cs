@@ -16,13 +16,15 @@ namespace CareSync.Controllers
         private readonly EmedicineContext _context;
         private readonly IUserService _userService;
         private readonly IAdminService _adminservice;
+        private readonly ITokenService _tokenService;
 
-        public UsersController(IConfiguration configuration, EmedicineContext context, IUserService userService, IAdminService adminService)
+        public UsersController(IConfiguration configuration, EmedicineContext context, IUserService userService, IAdminService adminService, ITokenService tokenService)
         {
             _configuration = configuration;
             _context = context;
             _userService = userService;
             _adminservice = adminService;
+            _tokenService = tokenService;
         }
 
         //-------------------- User Registration --------------------------------------------//

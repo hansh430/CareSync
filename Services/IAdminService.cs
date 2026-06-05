@@ -6,7 +6,7 @@ namespace CareSync.Services
 {
     public interface IAdminService
     {
-        Task<ServiceResponse<UserDto>> AdminLoginAsync(AdminLoginDto model);
+        Task<ServiceResponse<LoginResponseDto>> AdminLoginAsync(AdminLoginDto model);
         Task<ServiceResponse<DashboardDto>> GetDashboardAsync();
         Task<ServiceResponse<List<UserDto>>> GetUsersAsync();
         Task<ServiceResponse<User>> AddFundAsync(int userId, FundDto model);

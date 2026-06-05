@@ -9,42 +9,64 @@ namespace CareSync.Services
     public class AdminService : IAdminService
     {
         private readonly EmedicineContext _context;
-
-        public AdminService(EmedicineContext context)
+        private readonly ITokenService _tokenService;
+        public AdminService(EmedicineContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
 
-        public async Task<ServiceResponse<UserDto>> AdminLoginAsync(AdminLoginDto model)
+        public async Task<ServiceResponse<LoginResponseDto>> AdminLoginAsync(AdminLoginDto model)
         {
-            var response = new ServiceResponse<UserDto>();
+            var response = new ServiceResponse<LoginResponseDto>();
+
             var admin = await _context.Users
-                       .FirstOrDefaultAsync(x =>
-                        x.Email == model.Email &&
-                         x.Type == "Admin");
+                .FirstOrDefaultAsync(x =>
+                    x.Email == model.Email &&
+                    x.Type == "Admin");
 
             if (admin == null)
             {
                 response.Success = false;
                 response.Message = "Invalid admin credentials.";
+
                 return response;
             }
-            bool validPassword = BCrypt.Net.BCrypt.Verify(model.Password, admin.Password);
+
+            bool validPassword =
+                BCrypt.Net.BCrypt.Verify(
+                    model.Password,
+                    admin.Password);
+
             if (!validPassword)
             {
                 response.Success = false;
                 response.Message = "Invalid admin credentials.";
+
                 return response;
             }
-            response.Data = new UserDto
+
+            var token = _tokenService.CreateToken(admin);
+
+            response.Data = new LoginResponseDto
             {
-                Id = admin.Id,
-                FirstName = admin.FirstName,
-                LastName = admin.LastName,
-                Email = admin.Email,
+                Token = token,
+
+                User = new UserDto
+                {
+                    Id = admin.Id,
+                    FirstName = admin.FirstName,
+                    LastName = admin.LastName,
+                    Email = admin.Email,
+                    Fund = admin.Fund,
+                    Type = admin.Type,
+                    Status = admin.Status
+                }
             };
-            response.Message = "Admin login successful";
+
+            response.Message = "Admin login successful.";
+
             return response;
         }
 
