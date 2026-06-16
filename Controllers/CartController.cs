@@ -1,14 +1,17 @@
 ﻿using CareSync.Dtos;
 using CareSync.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.WebSockets;
+using System.Security.Claims;
 
 namespace CareSync.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CartController : ControllerBase
     {
         private readonly ICartService _cartService;
@@ -21,7 +24,9 @@ namespace CareSync.Controllers
         [HttpPost("addToCart")]
         public async Task<IActionResult> AddToCart(AddCartDto model)
         {
-            var result = await _cartService.AddToCartAsync(model);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = await _cartService.AddToCartAsync(userId, model);
 
             if (!result.Success)
                 return BadRequest(result.Message);

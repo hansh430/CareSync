@@ -17,6 +17,20 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
+//cors
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 // Controllers
 builder.Services.AddControllers();
 
@@ -50,6 +64,37 @@ builder.Services
                         Encoding.UTF8.GetBytes(
                             builder.Configuration["Jwt:Key"]!))
             };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+
+                await context.Response.WriteAsJsonAsync(
+                    new
+                    {
+                        Success = false,
+                        Message = "Please login to access this resource."
+                    });
+            },
+
+            OnForbidden = async context =>
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+
+                await context.Response.WriteAsJsonAsync(
+                    new
+                    {
+                        Success = false,
+                        Message = "You do not have permission to perform this action."
+                    });
+            }
+        };
     });
 
 // Authorization
@@ -131,8 +176,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+
 app.UseStaticFiles();
 
+app.UseCors("AllowReactApp");
 // JWT Middleware
 app.UseAuthentication();
 

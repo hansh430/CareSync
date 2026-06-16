@@ -16,10 +16,12 @@ namespace CareSync.Services
         }
 
         //-------------------- Add To cart --------------------------------------------//
-        public async Task<ServiceResponse<Cart>> AddToCartAsync(AddCartDto model)
+        public async Task<ServiceResponse<Cart>> AddToCartAsync(int userId, AddCartDto model)
         {
             var response = new ServiceResponse<Cart>();
-            var medicine = await _context.Medicines.FirstOrDefaultAsync(m => m.Id == model.MedicineId);
+
+            var medicine = await _context.Medicines
+                .FirstOrDefaultAsync(m => m.Id == model.MedicineId);
 
             if (medicine == null)
             {
@@ -28,34 +30,49 @@ namespace CareSync.Services
                 return response;
             }
 
+            decimal unitPrice = medicine.UnitPrice ?? 0;
+            decimal discount = medicine.Discount ?? 0;
+
+            // Price after discount
+            decimal finalPrice = unitPrice - discount;
+
             // Check if medicine already exists in cart
-            var existingCartItem = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == model.UserId && c.MedicineId == model.MedicineId);
+            var existingCartItem = await _context.Carts
+                .FirstOrDefaultAsync(c =>
+                    c.UserId == userId &&
+                    c.MedicineId == model.MedicineId);
+
             if (existingCartItem != null)
             {
-                existingCartItem.Quantity += model.Quantity;
+                existingCartItem.Quantity =
+                    (existingCartItem.Quantity ?? 0) + model.Quantity;
+
+                existingCartItem.UnitPrice = unitPrice;
+                existingCartItem.Discount = discount;
 
                 existingCartItem.TotalPrice =
-                    existingCartItem.Quantity *
-                    existingCartItem.UnitPrice;
+                    finalPrice * (existingCartItem.Quantity ?? 0);
 
                 await _context.SaveChangesAsync();
 
                 response.Data = existingCartItem;
-                response.Message = "Cart updated.";
+                response.Message = "Cart updated successfully.";
+
                 return response;
             }
 
             var cart = new Cart
             {
-                UserId = model.UserId,
+                UserId = userId,
                 MedicineId = model.MedicineId,
                 Quantity = model.Quantity,
-                UnitPrice = medicine.UnitPrice,
-                Discount = 0,
-                TotalPrice = medicine.UnitPrice * model.Quantity
+                UnitPrice = unitPrice,
+                Discount = discount,
+                TotalPrice = finalPrice * model.Quantity
             };
 
             _context.Carts.Add(cart);
+
             await _context.SaveChangesAsync();
 
             response.Data = cart;
