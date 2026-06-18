@@ -34,9 +34,18 @@ namespace CareSync.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMedicinesById(int id)
+        {
+            var result = await _medicineService.GetMedicineByIdAsync(id);
+            if (!result.Success)
+                return NotFound(result.Message);
+            return Ok(result);
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMedicine(int id, UpdateMedicineDto model)
+        public async Task<IActionResult> UpdateMedicine(int id, [FromForm] UpdateMedicineDto model)
         {
             var result = await _medicineService
                 .UpdateMedicineAsync(id, model);

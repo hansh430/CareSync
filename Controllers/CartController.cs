@@ -34,9 +34,10 @@ namespace CareSync.Controllers
             return Ok(result);
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetCart(int userId)
+        [HttpGet()]
+        public async Task<IActionResult> GetCart()
         {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var result = await _cartService.GetCartByUserAsync(userId);
 
             return Ok(result);

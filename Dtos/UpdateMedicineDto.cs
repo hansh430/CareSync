@@ -13,5 +13,7 @@
         public int Quantity { get; set; }
 
         public DateTime ExpDate { get; set; }
+        public int Status { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 }
