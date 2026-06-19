@@ -37,7 +37,7 @@ namespace CareSync.Services
                 UserId = userId,
                 OrderNo = $"ORD-{DateTime.Now:yyyyMMddHHmmss}",
                 OrderTotal = orderTotal,
-                OrderStatus = "Pending"
+                OrderStatus = "pending"
             };
 
             _context.Orders.Add(order);

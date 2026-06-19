@@ -85,7 +85,9 @@ namespace CareSync.Services
                .CountAsync(),
 
                 TotalRevenue = await _context.Orders
-               .SumAsync(x => x.OrderTotal ?? 0)
+               .SumAsync(x => x.OrderTotal ?? 0),
+
+                PendingOrders = await _context.Orders.CountAsync(x => x.OrderStatus == "pending")
             };
 
             return response;
