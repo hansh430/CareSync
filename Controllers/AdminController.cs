@@ -50,6 +50,21 @@ namespace CareSync.Controllers
             return Ok(await _adminService.GetOrdersAsync());
         }
 
+        //-------------------- Fetch all order Details --------------------------------------------//
+
+        [HttpGet("orders/{orderId}")]
+        public async Task<IActionResult> GetOrderDetails(int orderId)
+        {
+            var result = await _adminService.GetOrderDetailsAsync(orderId);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
         //-------------------- Update order status --------------------------------------------//
         [HttpPut("orders/{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, UpdateOrderStatusDto model)

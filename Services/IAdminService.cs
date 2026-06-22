@@ -8,6 +8,7 @@ namespace CareSync.Services
     {
         Task<ServiceResponse<LoginResponseDto>> AdminLoginAsync(AdminLoginDto model);
         Task<ServiceResponse<DashboardDto>> GetDashboardAsync();
+        Task<ServiceResponse<OrderDetailsDto>> GetOrderDetailsAsync(int orderId);
         Task<ServiceResponse<List<UserDto>>> GetUsersAsync();
         Task<ServiceResponse<User>> AddFundAsync(int userId, FundDto model);
         Task<ServiceResponse<List<OrderDto>>> GetOrdersAsync();

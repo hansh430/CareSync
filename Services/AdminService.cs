@@ -139,15 +139,73 @@ namespace CareSync.Services
         {
             var response = new ServiceResponse<List<OrderDto>>();
 
-            response.Data = await _context.Orders
-                .Select(x => new OrderDto
+            response.Data = await (
+                from order in _context.Orders
+                join user in _context.Users
+                on order.UserId equals user.Id
+                select new OrderDto
                 {
-                    Id = x.Id,
-                    OrderNo = x.OrderNo,
-                    OrderTotal = x.OrderTotal,
-                    OrderStatus = x.OrderStatus
-                })
-                .ToListAsync();
+                    Id = order.Id,
+                    OrderNo = order.OrderNo,
+                    UserName = user.FirstName + " " + user.LastName,
+                    OrderTotal = order.OrderTotal,
+                    OrderStatus = order.OrderStatus
+                }
+                ).ToListAsync();
+
+            return response;
+        }
+
+        //-------------------- Get Order details --------------------------------------------//
+        public async Task<ServiceResponse<OrderDetailsDto>> GetOrderDetailsAsync(int orderId)
+        {
+            var response = new ServiceResponse<OrderDetailsDto>();
+            var order = await _context.Orders.FirstOrDefaultAsync(x => x.Id == orderId);
+            if (order == null)
+            {
+                response.Success = false;
+                response.Message = "Order not found";
+                return response;
+            }
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == order.UserId);
+            var items = await (
+                from orderItem in _context.OrderItems
+                join medicine in _context.Medicines
+                on orderItem.MedicineId equals medicine.Id
+                where orderItem.OrderId == orderId
+                select new OrderItemDto
+                {
+                    MedicineId = medicine.Id,
+
+                    MedicineName = medicine.Name,
+
+                    ImageUrl = medicine.ImageUrl,
+
+                    UnitPrice = orderItem.UnitPrice,
+
+                    Discount = orderItem.Discount,
+
+                    Quantity = orderItem.Quantity,
+
+                    TotalPrice = orderItem.TotalPrice
+                }).ToListAsync();
+            response.Data =
+        new OrderDetailsDto
+        {
+            Id = order.Id,
+
+            OrderNo = order.OrderNo,
+
+            UserName = user == null
+                    ? ""
+                    : user.FirstName + " " + user.LastName,
+
+            OrderTotal = order.OrderTotal,
+
+            OrderStatus = order.OrderStatus,
+
+            Items = items
+        };
 
             return response;
         }
