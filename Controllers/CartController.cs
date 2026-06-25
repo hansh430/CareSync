@@ -1,4 +1,5 @@
 ﻿using CareSync.Dtos;
+using CareSync.Helpers;
 using CareSync.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -24,7 +25,7 @@ namespace CareSync.Controllers
         [HttpPost("addToCart")]
         public async Task<IActionResult> AddToCart(AddCartDto model)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = UserHelper.GetUserId(User);
 
             var result = await _cartService.AddToCartAsync(userId, model);
 
@@ -37,7 +38,7 @@ namespace CareSync.Controllers
         [HttpGet()]
         public async Task<IActionResult> GetCart()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = UserHelper.GetUserId(User);
             var result = await _cartService.GetCartByUserAsync(userId);
 
             return Ok(result);

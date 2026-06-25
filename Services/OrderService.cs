@@ -21,52 +21,79 @@ namespace CareSync.Services
         {
             var response = new ServiceResponse<Order>();
 
-            var cartItems = await _context.Carts
-                .Where(c => c.UserId == userId)
-                .ToListAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (!cartItems.Any())
+            try
             {
-                response.Success = false;
-                response.Message = "Cart is empty.";
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+                var cartItems = await _context.Carts
+                     .Where(c => c.UserId == userId)
+                     .ToListAsync();
+                if (!cartItems.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Cart is Empty";
+                    return response;
+                }
+
+                decimal orderTotal = cartItems.Sum(c => c.TotalPrice ?? 0);
+
+                //Check Wallet balance ---
+
+                if ((user.Fund ?? 0) < orderTotal)
+                {
+                    response.Success = false;
+                    response.Message = "Insuffiencient wallet balacne.";
+                    return response;
+                }
+
+                // Deduct amount from wallet
+                user.Fund = (user.Fund ?? 0) - orderTotal;
+
+                var order = new Order
+                {
+                    UserId = userId,
+                    OrderNo = $"ORD-{DateTime.Now:yyyyMMddHHmmss}",
+                    OrderTotal = orderTotal,
+                    OrderStatus = "Pending"
+                };
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+                foreach (var item in cartItems)
+                {
+                    var orderItem = new OrderItem
+                    {
+                        OrderId = order.Id,
+                        MedicineId = item.MedicineId,
+                        UnitPrice = item.UnitPrice,
+                        Discount = item.Discount,
+                        Quantity = item.Quantity,
+                        TotalPrice = item.TotalPrice
+                    };
+
+                    _context.OrderItems.Add(orderItem);
+                }
+                _context.Carts.RemoveRange(cartItems);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                response.Data = order;
+                response.Message = "Order placed successfully.";
                 return response;
             }
-            decimal orderTotal = cartItems.Sum(c => c.TotalPrice ?? 0);
-            var order = new Order
+            catch (Exception ex)
             {
-                UserId = userId,
-                OrderNo = $"ORD-{DateTime.Now:yyyyMMddHHmmss}",
-                OrderTotal = orderTotal,
-                OrderStatus = "pending"
-            };
-
-            _context.Orders.Add(order);
-
-            await _context.SaveChangesAsync();
-
-            foreach (var item in cartItems)
-            {
-                var orderItem = new OrderItem
-                {
-                    OrderId = order.Id,
-                    MedicineId = item.MedicineId,
-                    UnitPrice = item.UnitPrice,
-                    Discount = item.Discount,
-                    Quantity = item.Quantity,
-                    TotalPrice = item.TotalPrice
-                };
-
-                _context.OrderItems.Add(orderItem);
+                await transaction.RollbackAsync();
+                response.Success = false;
+                response.Message = ex.Message;
+                return response;
             }
 
-            _context.Carts.RemoveRange(cartItems);
-
-            await _context.SaveChangesAsync();
-
-            response.Data = order;
-            response.Message = "Order placed successfully.";
-
-            return response;
         }
 
         //--------------------Get list of orders for a user -------------------------------------

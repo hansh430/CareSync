@@ -1,4 +1,5 @@
-﻿using CareSync.Services;
+﻿using CareSync.Helpers;
+using CareSync.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +20,11 @@ namespace CareSync.Controllers
 
         //--------------------place order -------------------------------------
 
-        [HttpPost("place-order/{userId}")]
-        public async Task<IActionResult> PlaceOrder(int userId)
+        [HttpPost("place-order")]
+        public async Task<IActionResult> PlaceOrder()
         {
+            int userId = UserHelper.GetUserId(User);
+
             var result = await _orderService.PlaceOrderAsync(userId);
 
             if (!result.Success)
@@ -31,9 +34,10 @@ namespace CareSync.Controllers
         }
 
         //--------------------Get order details for a user -------------------------------------
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetOrdersByUser(int userId)
+        [HttpGet("my-orders")]
+        public async Task<IActionResult> GetMyOrders()
         {
+            int userId = UserHelper.GetUserId(User);
             var result = await _orderService.GetOrderByUserAsync(userId);
             return Ok(result);
         }

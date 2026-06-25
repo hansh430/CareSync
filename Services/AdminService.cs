@@ -1,4 +1,5 @@
-﻿using CareSync.Common;
+﻿using Azure;
+using CareSync.Common;
 using CareSync.Data;
 using CareSync.Dtos;
 using CareSync.Models;
@@ -87,7 +88,7 @@ namespace CareSync.Services
                 TotalRevenue = await _context.Orders
                .SumAsync(x => x.OrderTotal ?? 0),
 
-                PendingOrders = await _context.Orders.CountAsync(x => x.OrderStatus == "pending")
+                PendingOrders = await _context.Orders.CountAsync(x => x.OrderStatus == "Pending")
             };
 
             return response;
@@ -225,7 +226,19 @@ namespace CareSync.Services
                 return response;
             }
 
-            order.OrderStatus = model.Status;
+            string currentStatus = order.OrderStatus ?? "";
+            string newStatus = model.Status;
+
+            var error = GetInvalidTransitionMessage(currentStatus, newStatus);
+
+            if (error != null)
+            {
+                response.Success = false;
+                response.Message = error;
+                return response;
+            }
+
+            order.OrderStatus = newStatus;
 
             await _context.SaveChangesAsync();
 
@@ -233,6 +246,40 @@ namespace CareSync.Services
             response.Message = "Status updated successfully";
 
             return response;
+
+
         }
+
+        private string? GetInvalidTransitionMessage(string currentStatus, string newStatus)
+        {
+            switch (currentStatus)
+            {
+                case "Done":
+                    return "Completed orders cannot be modified.";
+
+                case "Cancelled":
+                    return "Cancelled orders cannot be modified.";
+
+                case "Pending":
+                    if (newStatus != "Processing" &&
+                        newStatus != "Cancelled")
+                    {
+                        return "Pending order can only move to Processing or Cancelled.";
+                    }
+                    break;
+
+                case "Processing":
+                    if (newStatus != "Done" &&
+                        newStatus != "Cancelled")
+                    {
+                        return "Processing order can only move to Done or Cancelled.";
+                    }
+                    break;
+            }
+
+            return null;
+        }
+
     }
+
 }

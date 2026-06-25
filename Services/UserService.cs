@@ -173,6 +173,33 @@ namespace CareSync.Services
             return response;
         }
 
+        //-------------------- User Home --------------------------------------------//
+
+        public async Task<ServiceResponse<UserHomeDto>> GetHomeDataAsync(int userId)
+        {
+            var response = new ServiceResponse<UserHomeDto>();
+
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+            response.Data = new UserHomeDto
+            {
+                TotalMedicines = await _context.Medicines.CountAsync(x => x.Status == 1),
+                CartItems = await _context.Carts.Where(x => x.UserId == userId)
+                                                 .SumAsync(x => x.Quantity ?? 0),
+                TotalOrders = await _context.Orders.CountAsync(x => x.UserId == userId),
+                WalletBalance = user?.Fund ?? 0,
+                FeaturedMedicines = await _context.Medicines.Where(x => x.Status == 1)
+                                                   .Take(4)
+                                                   .Select(x => new FeaturedMedicineDto
+                                                   {
+                                                       Id = x.Id,
+                                                       Name = x.Name,
+                                                       UnitPrice = x.UnitPrice,
+                                                       ImageUrl = x.ImageUrl
+                                                   }).ToListAsync()
+            };
+            return response;
+        }
 
     }
 

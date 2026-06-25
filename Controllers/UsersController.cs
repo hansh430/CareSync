@@ -1,7 +1,9 @@
 ﻿using CareSync.Data;
 using CareSync.Dtos;
+using CareSync.Helpers;
 using CareSync.Models;
 using CareSync.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -89,6 +91,16 @@ namespace CareSync.Controllers
             if (!result.Success)
                 return BadRequest(result.Message);
 
+            return Ok(result);
+        }
+
+        //-------------------- Get User Home Page --------------------------------------------//
+        [Authorize(Roles = "User")]
+        [HttpGet("home")]
+        public async Task<IActionResult> GetHome()
+        {
+            var userId = UserHelper.GetUserId(User);
+            var result = await _userService.GetHomeDataAsync(userId);
             return Ok(result);
         }
     }
