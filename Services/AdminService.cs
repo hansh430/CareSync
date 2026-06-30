@@ -4,6 +4,7 @@ using CareSync.Data;
 using CareSync.Dtos;
 using CareSync.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace CareSync.Services
 {
@@ -86,6 +87,7 @@ namespace CareSync.Services
                .CountAsync(),
 
                 TotalRevenue = await _context.Orders
+                .Where(x => x.OrderStatus == "Done")
                .SumAsync(x => x.OrderTotal ?? 0),
 
                 PendingOrders = await _context.Orders.CountAsync(x => x.OrderStatus == "Pending")
@@ -136,23 +138,37 @@ namespace CareSync.Services
         }
 
         //-------------------- Fetch all orders --------------------------------------------//
-        public async Task<ServiceResponse<List<OrderDto>>> GetOrdersAsync()
+        public async Task<ServiceResponse<PagedResultDto<OrderDto>>> GetOrdersAsync(int page, int pageSize)
         {
-            var response = new ServiceResponse<List<OrderDto>>();
+            var response = new ServiceResponse<PagedResultDto<OrderDto>>();
 
-            response.Data = await (
-                from order in _context.Orders
-                join user in _context.Users
-                on order.UserId equals user.Id
-                select new OrderDto
-                {
-                    Id = order.Id,
-                    OrderNo = order.OrderNo,
-                    UserName = user.FirstName + " " + user.LastName,
-                    OrderTotal = order.OrderTotal,
-                    OrderStatus = order.OrderStatus
-                }
-                ).ToListAsync();
+            var query = from order in _context.Orders
+                        join user in _context.Users
+                        on order.UserId equals user.Id
+                        orderby order.Id descending
+                        select new OrderDto
+                        {
+                            Id = order.Id,
+                            OrderNo = order.OrderNo,
+                            UserName = user.FirstName + " " + user.LastName,
+                            OrderTotal = order.OrderTotal,
+                            OrderStatus = order.OrderStatus
+                        };
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            response.Data = new PagedResultDto<OrderDto>
+            {
+                Items = items,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalItems
+            };
 
             return response;
         }
@@ -238,6 +254,9 @@ namespace CareSync.Services
                 return response;
             }
 
+            // Refund amount and restore stock when cancelled
+            await RefundIfOrderCanceled(newStatus, order);
+
             order.OrderStatus = newStatus;
 
             await _context.SaveChangesAsync();
@@ -247,9 +266,30 @@ namespace CareSync.Services
 
             return response;
 
-
         }
 
+        private async Task RefundIfOrderCanceled(string newStatus, Order order)
+        {
+            if (newStatus == "Cancelled")
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == order.UserId);
+                if (user != null)
+                {
+                    user.Fund = (user.Fund ?? 0) + (order.OrderTotal ?? 0);
+                }
+                var orderItems = await _context.OrderItems
+                    .Where(x => x.OrderId == order.Id).ToListAsync();
+
+                foreach (var item in orderItems)
+                {
+                    var medicine = await _context.Medicines.FirstOrDefaultAsync(x => x.Id == item.MedicineId);
+                    if (medicine != null)
+                    {
+                        medicine.Quantity += item.Quantity ?? 0;
+                    }
+                }
+            }
+        }
         private string? GetInvalidTransitionMessage(string currentStatus, string newStatus)
         {
             switch (currentStatus)

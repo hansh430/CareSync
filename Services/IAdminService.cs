@@ -11,7 +11,7 @@ namespace CareSync.Services
         Task<ServiceResponse<OrderDetailsDto>> GetOrderDetailsAsync(int orderId);
         Task<ServiceResponse<List<UserDto>>> GetUsersAsync();
         Task<ServiceResponse<User>> AddFundAsync(int userId, FundDto model);
-        Task<ServiceResponse<List<OrderDto>>> GetOrdersAsync();
+        Task<ServiceResponse<PagedResultDto<OrderDto>>> GetOrdersAsync(int page, int pageSize);
         Task<ServiceResponse<Order>> UpdateOrderStatusAsync(int orderId, UpdateOrderStatusDto model);
     }
 }

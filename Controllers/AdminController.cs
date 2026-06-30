@@ -45,9 +45,9 @@ namespace CareSync.Controllers
 
         //-------------------- Fetch all orders --------------------------------------------//
         [HttpGet("orders")]
-        public async Task<IActionResult> GetOrders()
+        public async Task<IActionResult> GetOrders(int page = 1, int pageSize = 10)
         {
-            return Ok(await _adminService.GetOrdersAsync());
+            return Ok(await _adminService.GetOrdersAsync(page, pageSize));
         }
 
         //-------------------- Fetch all order Details --------------------------------------------//

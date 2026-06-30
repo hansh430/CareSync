@@ -67,6 +67,29 @@ namespace CareSync.Services
                 await _context.SaveChangesAsync();
                 foreach (var item in cartItems)
                 {
+                    var medicine = await _context.Medicines
+                        .FirstOrDefaultAsync(x => x.Id == item.MedicineId);
+                    if (medicine == null)
+                    {
+                        await transaction.RollbackAsync();
+                        response.Success = false;
+                        response.Message = "Medicine not found";
+                        return response;
+                    }
+
+                    // Check stock availability
+                    if (medicine.Quantity < (item.Quantity ?? 0))
+                    {
+                        await transaction.RollbackAsync();
+
+                        response.Success = false;
+                        response.Message = $"{medicine.Name} has only {medicine.Quantity} item(s) left in stock.";
+
+                        return response;
+                    }
+
+                    medicine.Quantity -= item.Quantity ?? 0;
+
                     var orderItem = new OrderItem
                     {
                         OrderId = order.Id,
@@ -98,19 +121,33 @@ namespace CareSync.Services
 
         //--------------------Get list of orders for a user -------------------------------------
 
-        public async Task<ServiceResponse<List<OrderDto>>> GetOrderByUserAsync(int userId)
+        public async Task<ServiceResponse<PagedResultDto<OrderDto>>> GetOrderByUserAsync(int userId, int page, int pagesize)
         {
-            var response = new ServiceResponse<List<OrderDto>>();
+            var response = new ServiceResponse<PagedResultDto<OrderDto>>();
 
-            response.Data = await _context.Orders.Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.Id)
-                .Select(o => new OrderDto
+            var query = _context.Orders
+                .Where(x => x.UserId == userId)
+                .OrderByDescending(x => x.Id)
+                .Select(x => new OrderDto
                 {
-                    Id = o.Id,
-                    OrderNo = o.OrderNo,
-                    OrderTotal = o.OrderTotal,
-                    OrderStatus = o.OrderStatus,
-                }).ToListAsync();
+                    Id = x.Id,
+                    OrderNo = x.OrderNo,
+                    OrderTotal = x.OrderTotal,
+                    OrderStatus = x.OrderStatus,
+                });
+            var totalItems = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pagesize)
+                .Take(pagesize)
+                .ToListAsync();
+
+            response.Data = new PagedResultDto<OrderDto>
+            {
+                Items = items,
+                CurrentPage = page,
+                PageSize = pagesize,
+                TotalItems = totalItems
+            };
 
             return response;
         }

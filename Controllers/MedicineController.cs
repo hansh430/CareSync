@@ -27,9 +27,9 @@ namespace CareSync.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMedicines()
+        public async Task<IActionResult> GetMedicines(int page = 1, int pageSize = 6)
         {
-            var result = await _medicineService.GetMedicinesAsync();
+            var result = await _medicineService.GetMedicinesAsync(page, pageSize);
 
             return Ok(result);
         }

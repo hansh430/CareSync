@@ -35,10 +35,10 @@ namespace CareSync.Controllers
 
         //--------------------Get order details for a user -------------------------------------
         [HttpGet("my-orders")]
-        public async Task<IActionResult> GetMyOrders()
+        public async Task<IActionResult> GetMyOrders(int page, int pageSize = 10)
         {
             int userId = UserHelper.GetUserId(User);
-            var result = await _orderService.GetOrderByUserAsync(userId);
+            var result = await _orderService.GetOrderByUserAsync(userId, page, pageSize);
             return Ok(result);
         }
 

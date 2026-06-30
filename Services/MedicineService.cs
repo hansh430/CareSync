@@ -71,12 +71,28 @@ namespace CareSync.Services
             return response;
         }
 
-        public async Task<ServiceResponse<List<Medicine>>> GetMedicinesAsync()
+        public async Task<ServiceResponse<PagedResultDto<Medicine>>> GetMedicinesAsync(int page, int pageSize)
         {
-            return new ServiceResponse<List<Medicine>>
+            var response = new ServiceResponse<PagedResultDto<Medicine>>();
+
+            var query = _context.Medicines
+                .Where(x => x.Status == 1)
+                .OrderBy(x => x.Id);
+
+            int totalItems = await query.CountAsync();
+            var medicines = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            response.Data = new PagedResultDto<Medicine>
             {
-                Data = await _context.Medicines.ToListAsync()
+                Items = medicines,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
             };
+            return response;
         }
 
         public async Task<ServiceResponse<Medicine>> GetMedicineByIdAsync(int id)
